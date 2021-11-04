@@ -7,26 +7,14 @@ from torch import nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
+from modules import FeedForwardNetwork
+
 # helpers
 
 def pair(t):
     return t if isinstance(t, tuple) else (t, t)
 
 # classes
-class FeedForwardNetwork(nn.Module):
-    def __init__(self, dim, hidden_dim, dropout):
-        super().__init__()
-        self.ffn = nn.Sequential(
-            nn.Linear(dim, hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_dim, dim),
-            nn.Dropout(dropout)
-        )
-    
-    def forward(self, x):
-        return self.ffn(x)
-
 
 class Attention(nn.Module):
     def __init__(self, dim, heads = 8, dim_head = 64, dropout = 0.):
@@ -59,7 +47,7 @@ class Attention(nn.Module):
         return self.to_out(out)
 
 
-class SingleTransformer(nn.Module):
+class SingleVisualTransformer(nn.Module):
     def __init__(self, dim, mlp_dim, heads = 8, dim_head = 64, dropout = 0.):
         super().__init__()
         self.multi_head_attention = Attention(dim, heads, dim_head, dropout)
@@ -76,10 +64,10 @@ class SingleTransformer(nn.Module):
         return x
 
 
-class Transformer(nn.Module):
+class VisualTransformer(nn.Module):
     def __init__(self, num_layers, dim, mlp_dim, heads, dim_head, dropout):
         super().__init__()
-        module_list = [SingleTransformer(dim, mlp_dim, heads, dim_head, dropout) for _ in range(num_layers)]
+        module_list = [SingleVisualTransformer(dim, mlp_dim, heads, dim_head, dropout) for _ in range(num_layers)]
         self.net = nn.Sequential(*module_list)
 
     def forward(self, x):
@@ -87,7 +75,7 @@ class Transformer(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, 
+    def __init__(self, *, image_size, patch_size, dim, depth, 
                 heads, mlp_dim, pool = 'cls', channels = 3, 
                 dim_head = 64, dropout = 0., emb_dropout = 0.):
         super().__init__()
@@ -119,7 +107,7 @@ class Encoder(nn.Module):
         #     dropout=dropout,
         #     activation=nn.GELU()
         #     )
-        self.transformer = Transformer(depth, dim, mlp_dim, heads, dim_head, dropout)
+        self.transformer = VisualTransformer(depth, dim, mlp_dim, heads, dim_head, dropout)
         
         self.pool = pool
 
