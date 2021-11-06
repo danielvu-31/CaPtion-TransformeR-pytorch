@@ -53,7 +53,7 @@ class SingleVisualTransformer(nn.Module):
         self.multi_head_attention = Attention(dim, heads, dim_head, dropout)
         # Could try nn.MultiheadAttention class
         # self.multi_head_attention = nn.MultiheadAttention(dim, heads, dropout)
-        self.norm = nn.LayerNorm()
+        self.norm = nn.LayerNorm(dim)
         self.ffn = FeedForwardNetwork(dim, mlp_dim, dropout)
 
     def forward(self, x):
