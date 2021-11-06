@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 '''
 Masked Padding Seq Inputs
