@@ -12,7 +12,7 @@ class Vocab():
     '''
 
     punctuations = ["''", "'", "``", "`", "-LRB-", "-RRB-", "-LCB-", "-RCB-", \
-                    ".", "?", "!", ",", ":", "-", "--", "...", ";"]
+                    ".", "?", "!", ",", ":", "-", "--", "...", ";", "%"]
     
     def __init__(self,
                 min_threshold, 
@@ -41,13 +41,14 @@ class Vocab():
         with open(self.annotation_file_path, 'r') as f:
             self.full_data = json.load(f)
         
-        if not vocab_from_file:
+        if vocab_from_file:
             with open(self.vocab_file, 'rb') as f:
                 vocab = pickle.load(f)
                 self.word2idx = vocab.word2idx
                 self.idx2word = vocab.idx2word
             print("Vocabulary successfully loaded from vocab.pkl file!")
         else:
+            print("Building vocab")
             self.build_vocab()
             with open(self.vocab_file, 'wb') as f:
                 pickle.dump(self, f)
@@ -70,7 +71,7 @@ class Vocab():
     def add_word(self, word):
         if word not in self.word2idx.keys():
             self.word2idx[word] = self.idx
-            self.idx2word[self.idx2word] = word
+            self.idx2word[self.idx] = word
             self.idx += 1
 
     def get_full_vocab(self):
@@ -78,17 +79,19 @@ class Vocab():
 
         for s in self.splits:
             data = self.full_data[s]
-            image_ids = tqdm(data, desc=f'[Tokenizing {s}]:')
+            image_ids = tqdm(data, desc=f'[Tokenizing {s}]')
             for _, item in enumerate(image_ids):
                 for token in item["sentences"]:
                     if self.tokenizer == "nltk":
                         tokens = nltk.tokenize.word_tokenize(token["raw"].lower().strip())
-                    else:
+                    elif self.tokenizer == "spacy":
                         nlp = English()
                         tokenizer = nlp.tokenizer
-                        tokens = tokenizer(token["raw"].lower().strip())
+                        tokens = list(t.text for t in tokenizer(token["raw"].lower().strip()))
+                    else:
+                        tokens = token["tokens"]
                     if self.remove_punctuations:
-                        tokens = [token for token in tokens if token not in self.punctuations]
+                        tokens = [t for t in tokens if t not in self.punctuations]
                     counter.update(tokens)
 
         words = [word for word, count in counter.items() if count >= self.min_threshold]
@@ -104,3 +107,11 @@ class Vocab():
         return self.word2idx[word]
 
 
+if __name__ == "__main__":
+    vocab = Vocab(5,
+                "/Users/mac/Projects/CaPtion-TransformeR-pytorch/data/annotation/final_dataset.json",
+                ["train", "val", "restval"],
+                True,
+                vocab_file="./vocab_none.pkl",
+                tokenizer="None")
+    # print(vocab.word2idx)
