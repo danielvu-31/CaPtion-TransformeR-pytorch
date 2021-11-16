@@ -128,3 +128,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+*.jpg
+data/annotation/*.json
+
+loader2/
+
+config.json
+train.py
+trainer.py

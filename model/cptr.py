@@ -10,35 +10,22 @@ from modules import get_pad_mask, get_subsequent_mask
 
 class CPTR(nn.Module):
     def __init__(self,
-                image_size,
-                vocab_size, # Vocab Size of tgt dictionary
+                model_size, 
                 patch_size, 
+                input_size, 
+                pretrained,
+                vocab_size, # Vocab Size of tgt dictionary
                 dim, # Dimension of output
-                num_encoders, # Num of stacked encoders
                 num_decoders, # Num of stacked decoders
                 mlp_dim,
                 heads, # Multi-head attention, 
                 dim_head,
                 max_seq_len, # Max sequence length
                 tgt_pad_idx,
-                pool = 'cls', 
-                channels = 3,
                 dropout = 0., 
-                emb_dropout = 0.,
                 trg_emb_prj_weight_sharing=False):
     
-        self.encoder = Encoder(image_size, 
-                                patch_size, 
-                                dim, 
-                                num_encoders,
-                                heads, 
-                                mlp_dim, 
-                                pool, 
-                                channels, 
-                                dim_head, 
-                                dropout, 
-                                emb_dropout)
-        
+        self.encoder = Encoder(model_size, patch_size, input_size, pretrained)
         self.decoder = Decoder(vocab_size,
                                 num_decoders, 
                                 dim, # Dimension of output
